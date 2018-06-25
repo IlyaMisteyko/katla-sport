@@ -64,9 +64,63 @@ namespace KatlaSport.WebApi.Controllers
         [SwaggerResponse(HttpStatusCode.NoContent, Description = "Sets deleted status for an existed hive.")]
         [SwaggerResponse(HttpStatusCode.NotFound)]
         [SwaggerResponse(HttpStatusCode.InternalServerError)]
-        public IHttpActionResult SetStatus([FromUri] int hiveId, [FromUri] bool deletedStatus)
+        public async Task<IHttpActionResult> SetStatus([FromUri] int hiveId, [FromUri] bool deletedStatus)
         {
-            _hiveService.SetStatusAsync(hiveId, deletedStatus);
+            await _hiveService.SetStatusAsync(hiveId, deletedStatus);
+            return ResponseMessage(Request.CreateResponse(HttpStatusCode.NoContent));
+        }
+
+        [HttpPost]
+        [Route("")]
+        [SwaggerResponse(HttpStatusCode.Created)]
+        [SwaggerResponse(HttpStatusCode.BadRequest)]
+        [SwaggerResponse(HttpStatusCode.Conflict)]
+        [SwaggerResponse(HttpStatusCode.InternalServerError)]
+        public async Task<IHttpActionResult> AddHive(UpdateHiveRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var hive = await _hiveService.CreateHiveAsync(request);
+            var location = string.Format($"/api/hives/{hive.Id}");
+            return Created(location, hive);
+        }
+
+        [HttpPut]
+        [Route("")]
+        [SwaggerResponse(HttpStatusCode.NoContent)]
+        [SwaggerResponse(HttpStatusCode.BadRequest)]
+        [SwaggerResponse(HttpStatusCode.Conflict)]
+        [SwaggerResponse(HttpStatusCode.NotFound)]
+        [SwaggerResponse(HttpStatusCode.InternalServerError)]
+        public async Task<IHttpActionResult> UpdateHive([FromUri] int id, UpdateHiveRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            await _hiveService.UpdateHiveAsync(id, request);
+            return ResponseMessage(Request.CreateResponse(HttpStatusCode.NoContent));
+        }
+
+        [HttpDelete]
+        [Route("")]
+        [SwaggerResponse(HttpStatusCode.NoContent)]
+        [SwaggerResponse(HttpStatusCode.BadRequest)]
+        [SwaggerResponse(HttpStatusCode.Conflict)]
+        [SwaggerResponse(HttpStatusCode.NotFound)]
+        [SwaggerResponse(HttpStatusCode.InternalServerError)]
+        public async Task<IHttpActionResult> DeleteHive([FromUri] int id)
+        {
+            if (id < 1)
+            {
+                return BadRequest();
+            }
+
+            await _hiveService.DeleteHiveAsync(id);
             return ResponseMessage(Request.CreateResponse(HttpStatusCode.NoContent));
         }
     }
